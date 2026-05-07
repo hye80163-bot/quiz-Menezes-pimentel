@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizMaster</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #070b14;
+    --card: #0d1526;
+    --border: #1a2a4a;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --text: #f0f0f0;
+    --muted: #6b8aad;
+    --green: #4ade80;
+    --red: #f87171;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+    top: -100px;
+    right: -100px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 620px;
+    padding: 20px;
+    padding-top: 32px;
+    padding-bottom: 100px;
+  }
+
+  .screen { display: none; animation: fadeIn 0.4s ease; }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* INTRO */
+  .intro-screen { text-align: center; }
+
+  .school-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 99px;
+    padding: 8px 20px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 700;
+    margin-bottom: 28px;
+  }
+
+  .intro-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .intro-title span { color: var(--accent); }
+
+  .turma-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 4px 14px;
+    border-radius: 6px;
+    margin-bottom: 28px;
+  }
+
+  .intro-divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    margin: 0 auto 24px;
+  }
+
+  .intro-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 420px;
+    margin: 0 auto 28px;
+  }
+
+  .intro-desc strong { color: var(--text); }
+
+  .intro-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .intro-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  .intro-card-icon { font-size: 24px; margin-bottom: 6px; }
+  .intro-card-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .intro-card-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); }
+
+  /* TEAM */
+  .team-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .team-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .team-member {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .member-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* BUTTONS */
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.3); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* START */
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    line-height: 1;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-shadow: 0 0 60px rgba(59,130,246,0.4);
+  }
+
+  .logo span { color: var(--accent2); }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+    margin-bottom: 36px;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .cat-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    color: var(--text);
+  }
+
+  .cat-btn:hover, .cat-btn.selected {
+    border-color: var(--accent);
+    background: rgba(59,130,246,0.07);
+    transform: translateY(-2px);
+  }
+
+  .cat-btn.selected { box-shadow: 0 0 0 2px var(--accent); }
+
+  .cat-icon { font-size: 28px; margin-bottom: 8px; }
+  .cat-name { font-weight: 700; font-size: 15px; }
+  .cat-count { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* QUIZ */
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .q-counter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--accent);
+  }
+
+  .q-counter span { font-size: 16px; color: var(--muted); }
+
+  .timer-ring { position: relative; width: 56px; height: 56px; }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle { transition: stroke-dashoffset 1s linear; }
+
+  .timer-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .q-category {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .q-text { font-size: 18px; font-weight: 700; line-height: 1.4; }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .opt-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .opt-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(59,130,246,0.07);
+    transform: translateY(-2px);
+  }
+
+  .opt-letter {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .opt-btn.correct { border-color: var(--green); background: rgba(74,222,128,0.08); }
+  .opt-btn.correct .opt-letter { background: var(--green); color: #000; }
+  .opt-btn.wrong { border-color: var(--red); background: rgba(248,113,113,0.08); }
+  .opt-btn.wrong .opt-letter { background: var(--red); color: #000; }
+  .opt-btn:disabled { cursor: not-allowed; }
+
+  .feedback-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .feedback-bar.show { opacity: 1; }
+  .feedback-bar.ok { background: rgba(74,222,128,0.12); color: var(--green); }
+  .feedback-bar.err { background: rgba(248,113,113,0.12); color: var(--red); }
+
+  /* RESULT */
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 32px;
+    text-align: center;
+  }
+
+  .result-emoji { font-size: 64px; margin-bottom: 16px; }
+  .result-title { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+  .result-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  .score-display { font-family: 'Bebas Neue', sans-serif; font-size: 80px; color: var(--text); line-height: 1; }
+  .score-display span { font-size: 32px; color: var(--muted); }
+
+  .stats-row { display: flex; justify-content: center; gap: 32px; margin: 20px 0 32px; }
+  .stat { text-align: center; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; }
+  .stat-val.g { color: var(--green); }
+  .stat-val.r { color: var(--red); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    padding: 0 20px 12px;
+    pointer-events: none;
+  }
+
+  .nav-bar {
+    display: flex;
+    gap: 8px;
+    background: rgba(13,21,38,0.95);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 8px;
+    backdrop-filter: blur(12px);
+    pointer-events: all;
+  }
+
+  .nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 18px;
+    border-radius: 99px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .nav-btn .nav-icon { font-size: 20px; }
+  .nav-btn.active { background: var(--accent); color: #fff; }
+  .nav-btn:hover:not(.active) { color: var(--accent2); }
+
+  /* SUN SCREEN */
+  .sun-screen { text-align: center; padding-bottom: 80px; }
+
+  .sun-header {
+    margin-bottom: 8px;
+  }
+
+  .sun-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--text);
+    letter-spacing: 2px;
+  }
+
+  .sun-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .sun-canvas-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto 24px;
+  }
+
+  .sun-canvas-wrap canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .sun-timer-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(59,130,246,0.4);
+  }
+
+  .sun-timer-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .sun-stage-badge {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.3);
+    color: var(--accent2);
+    transition: all 0.5s;
+  }
+
+  .sun-milestones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .milestone {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.5s;
+  }
+
+  .milestone.reached {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(59,130,246,0.06);
+  }
+
+  .milestone-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: all 0.5s;
+  }
+
+  .milestone.reached .milestone-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .milestone-time { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--accent); margin-left: auto; }
+
+  /* MOBILE */
+  @media (max-width: 480px) {
+    .intro-title { font-size: 44px; }
+    .school-badge { font-size: 10px; padding: 6px 14px; margin-bottom: 16px; }
+    .intro-desc { font-size: 13px; margin-bottom: 20px; }
+    .intro-cards { gap: 8px; margin-bottom: 20px; }
+    .intro-card { padding: 12px 8px; }
+    .intro-card-icon { font-size: 20px; }
+    .intro-card-val { font-size: 18px; }
+    .intro-card-label { font-size: 9px; }
+    .team-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .team-member { font-size: 12px; }
+
+    .logo { font-size: 52px; }
+    .tagline { font-size: 11px; margin-bottom: 20px; }
+    .category-grid { gap: 8px; margin-bottom: 16px; }
+    .cat-btn { padding: 14px 12px; }
+    .cat-icon { font-size: 22px; margin-bottom: 4px; }
+    .cat-name { font-size: 13px; }
+
+    .q-text { font-size: 15px; }
+    .question-card { padding: 18px 14px; }
+    .options-grid { grid-template-columns: 1fr; gap: 8px; }
+    .opt-btn { font-size: 13px; }
+
+    .result-card { padding: 28px 18px; }
+    .result-title { font-size: 36px; }
+    .score-display { font-size: 60px; }
+    .stats-row { gap: 20px; }
+    .stat-val { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="intro-screen">
+      <div class="school-badge">🏫 Escola Menezes Pimentel</div>
+      <div class="intro-title">Projeto<br><span>QuizMaster</span></div>
+      <div class="turma-tag">TURMA 3B</div>
+      <div class="intro-divider"></div>
+      <p class="intro-desc">
+        Aplicativo desenvolvido pelos alunos da <strong>Turma 3B</strong> da
+        <strong>Escola Menezes Pimentel</strong>.<br><br>
+        Teste seus conhecimentos gerais com perguntas de diversas áreas do saber!
+      </p>
+      <div class="intro-cards">
+        <div class="intro-card">
+          <div class="intro-card-icon">📚</div>
+          <div class="intro-card-val">4</div>
+          <div class="intro-card-label">Categorias</div>
+        </div>
+        <div class="intro-card">
+          <div class="intro-card-icon">❓</div>
+          <div class="intro-card-val">80</div>
+          <div class="intro-card-label">Perguntas</div>
+        </div>
+        <div class="intro-card">
+          <div class="intro-card-icon">⏱</div>
+          <div class="intro-card-val">15s</div>
+          <div class="intro-card-label">Por pergunta</div>
+        </div>
+      </div>
+
+      <div class="team-section">
+        <div class="team-title">👥 Integrantes da Equipe</div>
+        <div class="team-grid">
+          <div class="team-member"><div class="member-dot"></div>Paulo Henrique</div>
+          <div class="team-member"><div class="member-dot"></div>Jonatas</div>
+          <div class="team-member"><div class="member-dot"></div>Wivis</div>
+          <div class="team-member"><div class="member-dot"></div>Antônio Levi</div>
+          <div class="team-member"><div class="member-dot"></div>Verismar</div>
+          <div class="team-member"><div class="member-dot"></div>Carlos Eduardo</div>
+          <div class="team-member"><div class="member-dot"></div>Carlos Daniel</div>
+          <div class="team-member"><div class="member-dot"></div>Samuel</div>
+          <div class="team-member"><div class="member-dot"></div>Nathanael</div>
+          <div class="team-member"><div class="member-dot"></div>José Henrique</div>
+          <div class="team-member"><div class="member-dot"></div>Evandro</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-intro">COMEÇAR QUIZ →</button>
+    </div>
+  </div>
+
+  <!-- START -->
+  <div class="screen" id="screen-start">
+    <div class="logo">Quiz<span>Master</span></div>
+    <div class="tagline">Escolha uma categoria</div>
+    <div class="category-grid" id="cat-grid"></div>
+    <button class="btn-primary" id="btn-start" disabled>INICIAR →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="quiz-header">
+      <div class="q-counter" id="q-counter">01 <span>/ 20</span></div>
+      <div class="timer-ring">
+        <svg width="56" height="56">
+          <circle cx="28" cy="28" r="24" fill="none" stroke="#1a2a4a" stroke-width="4"/>
+          <circle id="timer-circle" cx="28" cy="28" r="24" fill="none" stroke="#3b82f6" stroke-width="4"
+            stroke-dasharray="150.8" stroke-dashoffset="0" stroke-linecap="round"/>
+        </svg>
+        <div class="timer-num" id="timer-num">15</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="question-card">
+      <div class="q-category" id="q-category"></div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="options-grid" id="options-grid"></div>
+    <div class="feedback-bar" id="feedback-bar"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="result-card">
+      <div class="result-emoji" id="result-emoji">🏆</div>
+      <div class="result-title" id="result-title">INCRÍVEL!</div>
+      <div class="result-sub" id="result-sub">Você foi muito bem!</div>
+      <div class="score-display" id="score-display">16 <span>/ 20</span></div>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-val g" id="stat-correct">0</div><div class="stat-label">Corretas</div></div>
+        <div class="stat"><div class="stat-val r" id="stat-wrong">0</div><div class="stat-label">Erradas</div></div>
+        <div class="stat"><div class="stat-val" id="stat-pct" style="color:var(--accent)">0%</div><div class="stat-label">Acertos</div></div>
+      </div>
+      <button class="btn-primary" id="btn-restart">JOGAR NOVAMENTE</button>
+      <button class="btn-secondary" id="btn-change">Trocar categoria</button>
+    </div>
+  </div>
+
+  <!-- SUN SCREEN -->
+  <div class="screen" id="screen-sun">
+    <div class="sun-screen">
+      <div class="sun-header">
+        <div class="sun-title">☀️ Energia do Time</div>
+      </div>
+      <p class="sun-subtitle">A luz cresce conforme o tempo passa!</p>
+
+      <div class="sun-canvas-wrap">
+        <canvas id="sunCanvas" width="340" height="340"></canvas>
+      </div>
+
+      <div class="sun-timer-display" id="sun-timer">00:00</div>
+      <div class="sun-timer-label">tempo de sessão</div>
+
+      <div class="sun-stage-badge" id="sun-stage">🌑 Aguardando energia...</div>
+
+      <div class="sun-milestones">
+        <div class="milestone" id="m1">
+          <div class="milestone-dot"></div>
+          ☀️ Raio de luz aparece
+          <div class="milestone-time">1 min</div>
+        </div>
+        <div class="milestone" id="m2">
+          <div class="milestone-dot"></div>
+          🌤️ Luz se fortalece
+          <div class="milestone-time">3 min</div>
+        </div>
+        <div class="milestone" id="m3">
+          <div class="milestone-dot"></div>
+          🌍 Luz toca a Terra
+          <div class="milestone-time">5 min</div>
+        </div>
+        <div class="milestone" id="m4">
+          <div class="milestone-dot"></div>
+          🌟 Energia máxima!
+          <div class="milestone-time">10 min</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-bar">
+    <button class="nav-btn active" id="nav-home" onclick="navTo('intro')">
+      <span class="nav-icon">🏠</span>
+      Início
+    </button>
+    <button class="nav-btn" id="nav-quiz" onclick="navTo('start')">
+      <span class="nav-icon">❓</span>
+      Quiz
+    </button>
+    <button class="nav-btn" id="nav-sun" onclick="navTo('sun')">
+      <span class="nav-icon">☀️</span>
+      Energia
+    </button>
+  </div>
+</div>
+<script>
+// NAV
+function navTo(screen) {
+  const map = { intro: 'screen-intro', start: 'screen-start', sun: 'screen-sun' };
+  showScreen(map[screen] || 'screen-intro');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + screen)?.classList.add('active');
+}
+
+// SUN ANIMATION
+const canvas = document.getElementById('sunCanvas');
+const ctx = canvas.getContext('2d');
+const W = 340, H = 340;
+let sessionStart = Date.now();
+let animFrame;
+
+const SUN_X = W/2, SUN_Y = 48, SUN_R = 36;
+const EARTH_X = W/2, EARTH_Y = H - 48, EARTH_R = 28;
+
+const MILESTONES = [
+  { secs: 60,  id: 'm1', stage: '☀️ Raio de luz aparece!' },
+  { secs: 180, id: 'm2', stage: '🌤️ Luz se fortalecendo...' },
+  { secs: 300, id: 'm3', stage: '🌍 Luz tocando a Terra!' },
+  { secs: 600, id: 'm4', stage: '🌟 Energia máxima!' },
+];
+
+function getProgress(elapsed) { return Math.min(elapsed / 600, 1); }
+
+function drawSun(glow) {
+  const grad = ctx.createRadialGradient(SUN_X, SUN_Y, SUN_R*0.5, SUN_X, SUN_Y, SUN_R*(2+glow*2));
+  grad.addColorStop(0, `rgba(255,220,50,${0.3+glow*0.4})`);
+  grad.addColorStop(1, 'rgba(255,180,0,0)');
+  ctx.beginPath(); ctx.arc(SUN_X, SUN_Y, SUN_R*(2.5+glow*2), 0, Math.PI*2);
+  ctx.fillStyle = grad; ctx.fill();
+
+  const sunGrad = ctx.createRadialGradient(SUN_X-8, SUN_Y-8, 4, SUN_X, SUN_Y, SUN_R);
+  sunGrad.addColorStop(0, '#fff7a0'); sunGrad.addColorStop(0.5, '#ffd700'); sunGrad.addColorStop(1, '#ff9900');
+  ctx.beginPath(); ctx.arc(SUN_X, SUN_Y, SUN_R, 0, Math.PI*2); ctx.fillStyle = sunGrad; ctx.fill();
+
+  if (glow > 0) {
+    ctx.save(); ctx.translate(SUN_X, SUN_Y);
+    for (let i = 0; i < 8; i++) {
+      ctx.rotate(Math.PI/4);
+      ctx.beginPath(); ctx.moveTo(SUN_R+4, 0); ctx.lineTo(SUN_R+4+16*glow, 0);
+      ctx.strokeStyle = `rgba(255,220,50,${glow*0.8})`; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawEarth(lit) {
+  if (lit > 0) {
+    const eg = ctx.createRadialGradient(EARTH_X, EARTH_Y, EARTH_R, EARTH_X, EARTH_Y, EARTH_R*2.5);
+    eg.addColorStop(0, `rgba(59,130,246,${lit*0.4})`); eg.addColorStop(1, 'rgba(59,130,246,0)');
+    ctx.beginPath(); ctx.arc(EARTH_X, EARTH_Y, EARTH_R*2.5, 0, Math.PI*2); ctx.fillStyle = eg; ctx.fill();
+  }
+  const earthGrad = ctx.createRadialGradient(EARTH_X-8, EARTH_Y-8, 4, EARTH_X, EARTH_Y, EARTH_R);
+  earthGrad.addColorStop(0, lit > 0 ? '#a0d8ff' : '#2a4a8a');
+  earthGrad.addColorStop(1, lit > 0 ? '#3b82f6' : '#1a3a6a');
+  ctx.beginPath(); ctx.arc(EARTH_X, EARTH_Y, EARTH_R, 0, Math.PI*2); ctx.fillStyle = earthGrad; ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(EARTH_X, EARTH_Y, EARTH_R, 0, Math.PI*2); ctx.clip();
+  ctx.fillStyle = `rgba(${lit>0?'80,160,80':'40,90,40'},0.7)`;
+  ctx.beginPath(); ctx.ellipse(EARTH_X-8, EARTH_Y-4, 10, 14, -0.3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(EARTH_X+10, EARTH_Y+6, 8, 10, 0.4, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
+function drawBeam(progress) {
+  if (progress <= 0) return;
+  const beamStart = SUN_Y + SUN_R + 4;
+  const beamEnd = EARTH_Y - EARTH_R - 4;
+  const currentEnd = beamStart + (beamEnd - beamStart) * Math.min(progress * 2, 1);
+  const beamGrad = ctx.createLinearGradient(W/2, beamStart, W/2, currentEnd);
+  beamGrad.addColorStop(0, `rgba(255,220,50,${0.6+progress*0.4})`);
+  beamGrad.addColorStop(1, `rgba(255,220,50,${progress>0.5?0.8:0.2})`);
+  ctx.beginPath();
+  ctx.moveTo(W/2-12*progress, beamStart); ctx.lineTo(W/2+12*progress, beamStart);
+  ctx.lineTo(W/2+8*progress, currentEnd); ctx.lineTo(W/2-8*progress, currentEnd);
+  ctx.closePath(); ctx.fillStyle = `rgba(255,220,50,${0.08+progress*0.1})`; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(W/2, beamStart); ctx.lineTo(W/2, currentEnd);
+  ctx.strokeStyle = beamGrad; ctx.lineWidth = 3+progress*3; ctx.lineCap = 'round'; ctx.stroke();
+  const numP = Math.floor(progress * 8);
+  for (let i = 0; i < numP; i++) {
+    const t = (Date.now()/800 + i/numP) % 1;
+    const py = beamStart + (currentEnd-beamStart)*t;
+    const px = W/2 + Math.sin(t*Math.PI*3+i)*3*progress;
+    ctx.beginPath(); ctx.arc(px, py, 1.5+progress, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,180,${0.6*(1-t)})`; ctx.fill();
+  }
+}
+
+function drawFrame() {
+  const elapsed = (Date.now() - sessionStart) / 1000;
+  const progress = getProgress(elapsed);
+  ctx.clearRect(0, 0, W, H);
+  [[40,20],[80,60],[200,30],[280,80],[300,20],[60,120],[320,150],[20,200]].forEach(([x,y]) => {
+    ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fill();
+  });
+  drawSun(0.3 + progress * 0.7);
+  drawBeam(progress);
+  drawEarth(progress > 0.5 ? (progress - 0.5) * 2 : 0);
+  const mins = Math.floor(elapsed/60).toString().padStart(2,'0');
+  const secs = Math.floor(elapsed%60).toString().padStart(2,'0');
+  document.getElementById('sun-timer').textContent = `${mins}:${secs}`;
+  let currentStage = '🌑 Aguardando energia...';
+  MILESTONES.forEach(m => {
+    if (elapsed >= m.secs) { document.getElementById(m.id).classList.add('reached'); currentStage = m.stage; }
+  });
+  document.getElementById('sun-stage').textContent = currentStage;
+  animFrame = requestAnimationFrame(drawFrame);
+}
+
+const sunObserver = new MutationObserver(() => {
+  if (document.getElementById('screen-sun').classList.contains('active')) {
+    cancelAnimationFrame(animFrame); drawFrame();
+  } else { cancelAnimationFrame(animFrame); }
+});
+sunObserver.observe(document.getElementById('screen-sun'), { attributes: true });
+
+
+  ciencias: {
+    icon: '🔬', name: 'Ciências',
+    questions: [
+      { q: 'Qual é o símbolo químico do ouro?', opts: ['Au','Ag','Fe','Cr'], a: 0 },
+      { q: 'Quantos ossos tem o corpo humano adulto?', opts: ['206','186','220','198'], a: 0 },
+      { q: 'Qual gás as plantas absorvem para fazer fotossíntese?', opts: ['CO₂','O₂','N₂','H₂'], a: 0 },
+      { q: 'Qual é o planeta mais próximo do Sol?', opts: ['Mercúrio','Vênus','Terra','Marte'], a: 0 },
+      { q: 'A água ferve a quantos graus Celsius ao nível do mar?', opts: ['100°C','90°C','110°C','80°C'], a: 0 },
+      { q: 'Qual é o maior órgão do corpo humano?', opts: ['Pele','Fígado','Pulmão','Coração'], a: 0 },
+      { q: 'Quantos cromossomos tem uma célula humana normal?', opts: ['46','23','48','44'], a: 0 },
+      { q: 'Qual é a velocidade da luz (aprox)?', opts: ['300.000 km/s','150.000 km/s','450.000 km/s','200.000 km/s'], a: 0 },
+      { q: 'O DNA é composto por quantas fitas na dupla hélice?', opts: ['2','3','4','1'], a: 0 },
+      { q: 'Qual é o elemento mais abundante no universo?', opts: ['Hidrogênio','Oxigênio','Carbono','Hélio'], a: 0 },
+      { q: 'Qual é a fórmula química da água?', opts: ['H₂O','CO₂','NaCl','H₂O₂'], a: 0 },
+      { q: 'Quantos planetas tem o sistema solar?', opts: ['8','9','7','10'], a: 0 },
+      { q: 'Qual animal tem o maior cérebro em relação ao corpo?', opts: ['Golfinho','Elefante','Chimpanzé','Baleia'], a: 0 },
+      { q: 'O que é a fotossíntese?', opts: ['Produção de energia pela luz solar','Respiração celular','Digestão de nutrientes','Reprodução das plantas'], a: 0 },
+      { q: 'Qual é o metal mais leve?', opts: ['Lítio','Alumínio','Magnésio','Titânio'], a: 0 },
+      { q: 'Quantas horas dura um dia completo na Terra?', opts: ['24h','22h','26h','23h'], a: 0 },
+      { q: 'Qual é a camada mais externa da Terra?', opts: ['Crosta','Manto','Núcleo','Litosfera'], a: 0 },
+      { q: 'O que estuda a Botânica?', opts: ['Plantas','Animais','Fungos','Bactérias'], a: 0 },
+      { q: 'Qual gás compõe a maior parte da atmosfera terrestre?', opts: ['Nitrogênio','Oxigênio','CO₂','Argônio'], a: 0 },
+      { q: 'Qual é o maior planeta do sistema solar?', opts: ['Júpiter','Saturno','Urano','Netuno'], a: 0 },
+    ]
+  },
+  historia: {
+    icon: '📜', name: 'História',
+    questions: [
+      { q: 'Em que ano o Brasil foi descoberto pelos portugueses?', opts: ['1500','1492','1502','1498'], a: 0 },
+      { q: 'Quem proclamou a República do Brasil?', opts: ['Deodoro da Fonseca','Dom Pedro II','Tiradentes','Getúlio Vargas'], a: 0 },
+      { q: 'A Segunda Guerra Mundial terminou em que ano?', opts: ['1945','1944','1946','1943'], a: 0 },
+      { q: 'Qual civilização construiu as pirâmides de Gizé?', opts: ['Egípcios','Romanos','Gregos','Babilônios'], a: 0 },
+      { q: 'Em que ano ocorreu a Revolução Francesa?', opts: ['1789','1799','1776','1804'], a: 0 },
+      { q: 'Quem foi o primeiro presidente dos EUA?', opts: ['George Washington','Abraham Lincoln','Thomas Jefferson','Benjamin Franklin'], a: 0 },
+      { q: 'Em que cidade ocorreu a Olimpíada de 2016?', opts: ['Rio de Janeiro','São Paulo','Brasília','Buenos Aires'], a: 0 },
+      { q: 'Qual país lançou o primeiro satélite artificial (Sputnik)?', opts: ['URSS','EUA','China','Alemanha'], a: 0 },
+      { q: 'A Lei Áurea aboliu a escravidão no Brasil em que ano?', opts: ['1888','1889','1850','1871'], a: 0 },
+      { q: 'Quem pintou a Mona Lisa?', opts: ['Leonardo da Vinci','Michelangelo','Rafael','Botticelli'], a: 0 },
+      { q: 'Em que ano o homem pisou na Lua pela primeira vez?', opts: ['1969','1972','1965','1971'], a: 0 },
+      { q: 'Qual foi o primeiro país a conceder o direito de voto às mulheres?', opts: ['Nova Zelândia','EUA','França','Brasil'], a: 0 },
+      { q: 'Quem foi Napoleão Bonaparte?', opts: ['Imperador francês','Rei inglês','General russo','Líder americano'], a: 0 },
+      { q: 'Em que ano o Brasil se tornou independente de Portugal?', opts: ['1822','1789','1888','1815'], a: 0 },
+      { q: 'Qual país foi o primeiro a usar a bomba atômica na guerra?', opts: ['EUA','URSS','Alemanha','Japão'], a: 0 },
+      { q: 'Quem foi Dom Pedro I?', opts: ['Primeiro imperador do Brasil','Último rei de Portugal','Primeiro presidente do Brasil','General da independência'], a: 0 },
+      { q: 'Onde ocorreu a Revolução Industrial?', opts: ['Inglaterra','França','Alemanha','EUA'], a: 0 },
+      { q: 'Qual civilização criou os Jogos Olímpicos?', opts: ['Grécia','Roma','Egito','Pérsia'], a: 0 },
+      { q: 'Em que continente ficava o Império Romano?', opts: ['Europa','Ásia','África','América'], a: 0 },
+      { q: 'Quem foi Martin Luther King Jr.?', opts: ['Líder dos direitos civis nos EUA','Presidente americano','General da Segunda Guerra','Fundador dos EUA'], a: 0 },
+    ]
+  },
+  tecnologia: {
+    icon: '💻', name: 'Tecnologia',
+    questions: [
+      { q: 'O que significa "HTML"?', opts: ['HyperText Markup Language','High Transfer Markup Language','HyperText Modern Language','Hyper Transfer Machine Learning'], a: 0 },
+      { q: 'Quem fundou a Apple?', opts: ['Steve Jobs','Bill Gates','Mark Zuckerberg','Elon Musk'], a: 0 },
+      { q: 'O que é "RAM"?', opts: ['Random Access Memory','Read All Memory','Random Access Module','Read Access Memory'], a: 0 },
+      { q: 'Qual linguagem é usada para estilizar páginas web?', opts: ['CSS','Java','Python','C++'], a: 0 },
+      { q: 'O que significa "URL"?', opts: ['Uniform Resource Locator','Universal Resource Link','Uniform Route Locator','Universal Route Language'], a: 0 },
+      { q: 'Em que ano o primeiro iPhone foi lançado?', opts: ['2007','2005','2009','2010'], a: 0 },
+      { q: 'O que é "open source"?', opts: ['Código aberto','Código secreto','Código pago','Código privado'], a: 0 },
+      { q: 'Qual empresa criou o sistema Android?', opts: ['Google','Apple','Microsoft','Samsung'], a: 0 },
+      { q: 'O que significa "CPU"?', opts: ['Central Processing Unit','Computer Processing Unit','Central Program Utility','Core Processing Unit'], a: 0 },
+      { q: 'Qual linguagem é conhecida como a linguagem da web para interatividade?', opts: ['JavaScript','Python','Ruby','PHP'], a: 0 },
+      { q: 'O que é inteligência artificial?', opts: ['Sistemas que simulam inteligência humana','Robôs físicos','Programas de edição de foto','Jogos de computador'], a: 0 },
+      { q: 'O que é um "bug" em programação?', opts: ['Um erro no código','Um vírus','Um arquivo corrompido','Uma atualização'], a: 0 },
+      { q: 'Qual é a função de um firewall?', opts: ['Proteger a rede de acessos não autorizados','Acelerar a internet','Armazenar dados','Criar backups'], a: 0 },
+      { q: 'O que significa "Wi-Fi"?', opts: ['Wireless Fidelity','Wide Fidelity','Wireless Fiber','Wire Fidelity'], a: 0 },
+      { q: 'Quem fundou a Microsoft?', opts: ['Bill Gates','Steve Jobs','Mark Zuckerberg','Larry Page'], a: 0 },
+      { q: 'O que é nuvem (cloud) em tecnologia?', opts: ['Armazenamento de dados online','Um sistema operacional','Um tipo de cabo','Um programa antivírus'], a: 0 },
+      { q: 'O que é um algoritmo?', opts: ['Sequência de passos para resolver um problema','Um tipo de vírus','Uma linguagem de programação','Um hardware'], a: 0 },
+      { q: 'Qual rede social foi criada por Mark Zuckerberg?', opts: ['Facebook','Twitter','Instagram','TikTok'], a: 0 },
+      { q: 'O que significa "GPS"?', opts: ['Global Positioning System','General Positioning Satellite','Global Precision System','General Precision Satellite'], a: 0 },
+      { q: 'Qual é o sistema operacional mais usado em smartphones?', opts: ['Android','iOS','Windows','Linux'], a: 0 },
+    ]
+  },
+  esportes: {
+    icon: '⚽', name: 'Esportes',
+    questions: [
+      { q: 'Quantos jogadores tem um time de futebol em campo?', opts: ['11','10','12','9'], a: 0 },
+      { q: 'Qual país ganhou mais Copas do Mundo de futebol?', opts: ['Brasil','Alemanha','Argentina','Itália'], a: 0 },
+      { q: 'Quantos sets são necessários para vencer no tênis (Grand Slam masculino)?', opts: ['3 de 5','2 de 3','4 de 7','1 de 3'], a: 0 },
+      { q: 'Quanto tempo dura um jogo de basquete na NBA?', opts: ['48 min','40 min','60 min','45 min'], a: 0 },
+      { q: 'Qual o esporte mais praticado no mundo?', opts: ['Futebol','Natação','Basquete','Voleibol'], a: 0 },
+      { q: 'Em qual cidade foram os Jogos Olímpicos de 2020?', opts: ['Tóquio','Paris','Londres','Atenas'], a: 0 },
+      { q: 'Quantos jogadores tem um time de vôlei em quadra?', opts: ['6','7','5','8'], a: 0 },
+      { q: 'Qual é o apelido da seleção brasileira de futebol?', opts: ['Canarinha','Seleção Verde','Esquadrão','Campeões'], a: 0 },
+      { q: 'Quantas rodadas tem uma luta de boxe profissional (máximo)?', opts: ['12','10','15','8'], a: 0 },
+      { q: 'Qual atleta ganhou mais medalhas olímpicas na história?', opts: ['Michael Phelps','Usain Bolt','Carl Lewis','Mark Spitz'], a: 0 },
+      { q: 'Qual é o maior evento do futebol mundial?', opts: ['Copa do Mundo','Champions League','Copa América','Eurocopa'], a: 0 },
+      { q: 'Quantos pontos vale uma cesta de 3 no basquete?', opts: ['3','2','4','1'], a: 0 },
+      { q: 'Qual é o esporte nacional do Japão?', opts: ['Sumô','Judô','Karatê','Kendô'], a: 0 },
+      { q: 'Quantas pessoas jogam tênis numa partida de simples?', opts: ['2','4','1','3'], a: 0 },
+      { q: 'Qual esporte usa um volante (peteca)?', opts: ['Badminton','Tênis','Squash','Pingue-pongue'], a: 0 },
+      { q: 'Em que país foram os Jogos Olímpicos de 2024?', opts: ['França','EUA','Japão','Alemanha'], a: 0 },
+      { q: 'Qual é o time com mais títulos no futebol brasileiro?', opts: ['Flamengo','Santos','São Paulo','Palmeiras'], a: 0 },
+      { q: 'Quantos jogadores tem um time de futebol americano em campo?', opts: ['11','12','10','13'], a: 0 },
+      { q: 'Qual é o torneio de tênis mais antigo do mundo?', opts: ['Wimbledon','Roland Garros','US Open','Australian Open'], a: 0 },
+      { q: 'Quantos tempos tem uma partida oficial de futebol?', opts: ['2','3','4','1'], a: 0 },
+    ]
+  }
+};
+
+const LETTERS = ['A','B','C','D'];
+const TIMER_MAX = 15;
+const CIRCUMFERENCE = 150.8;
+
+let selectedCat = null;
+let questions = [];
+let current = 0;
+let score = 0;
+let wrong = 0;
+let timerInterval = null;
+let timeLeft = TIMER_MAX;
+
+document.getElementById('btn-intro').onclick = () => navTo('start');
+document.getElementById('btn-start').onclick = startQuiz;
+document.getElementById('btn-restart').onclick = () => startQuiz();
+document.getElementById('btn-change').onclick = () => {
+  navTo('start');
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  selectedCat = null;
+  document.getElementById('btn-start').disabled = true;
+};
+
+const catGrid = document.getElementById('cat-grid');
+Object.entries(QUESTIONS).forEach(([key, cat]) => {
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn';
+  btn.innerHTML = `<div class="cat-icon">${cat.icon}</div><div class="cat-name">${cat.name}</div><div class="cat-count">20 perguntas</div>`;
+  btn.onclick = () => {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedCat = key;
+    document.getElementById('btn-start').disabled = false;
+  };
+  catGrid.appendChild(btn);
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  questions = [...QUESTIONS[selectedCat].questions].sort(() => Math.random() - 0.5);
+  current = 0; score = 0; wrong = 0;
+  showScreen('screen-quiz');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  const cat = QUESTIONS[selectedCat];
+  document.getElementById('q-counter').innerHTML = `${String(current+1).padStart(2,'0')} <span>/ ${questions.length}</span>`;
+  document.getElementById('q-category').textContent = `${cat.icon} ${cat.name}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('progress-fill').style.width = `${(current / questions.length) * 100}%`;
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-letter">${LETTERS[i]}</span>${opt}`;
+    btn.onclick = () => answer(i, q.a);
+    grid.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedback-bar');
+  fb.className = 'feedback-bar';
+  fb.textContent = '';
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = TIMER_MAX;
+  updateTimer();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) { clearInterval(timerInterval); timeExpired(); }
+  }, 1000);
+}
+
+function updateTimer() {
+  document.getElementById('timer-num').textContent = timeLeft;
+  const offset = CIRCUMFERENCE * (1 - timeLeft / TIMER_MAX);
+  document.getElementById('timer-circle').style.strokeDashoffset = offset;
+  document.getElementById('timer-circle').style.stroke = timeLeft <= 5 ? '#f87171' : '#3b82f6';
+}
+
+function timeExpired() {
+  wrong++;
+  disableOptions(questions[current].a, -1);
+  showFeedback(false, 'Tempo esgotado! ⏱');
+  setTimeout(next, 1800);
+}
+
+function answer(chosen, correct) {
+  clearInterval(timerInterval);
+  const isCorrect = chosen === correct;
+  if (isCorrect) score++; else wrong++;
+  disableOptions(correct, isCorrect ? -1 : chosen);
+  showFeedback(isCorrect, isCorrect ? '✓ Correto!' : '✗ Errado!');
+  setTimeout(next, 1500);
+}
+
+function disableOptions(correctIdx, wrongIdx) {
+  document.querySelectorAll('.opt-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correctIdx) btn.classList.add('correct');
+    if (i === wrongIdx) btn.classList.add('wrong');
+  });
+}
+
+function showFeedback(ok, msg) {
+  const fb = document.getElementById('feedback-bar');
+  fb.textContent = msg;
+  fb.className = `feedback-bar show ${ok ? 'ok' : 'err'}`;
+}
+
+function next() {
+  current++;
+  if (current >= questions.length) showResult();
+  else loadQuestion();
+}
+
+function showResult() {
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+  let emoji, title, sub;
+  if (pct === 100) { emoji = '🏆'; title = 'PERFEITO!'; sub = 'Você acertou tudo! Incrível!'; }
+  else if (pct >= 80) { emoji = '🌟'; title = 'INCRÍVEL!'; sub = 'Você foi muito bem!'; }
+  else if (pct >= 60) { emoji = '👏'; title = 'BOM TRABALHO!'; sub = 'Continue estudando!'; }
+  else if (pct >= 40) { emoji = '📚'; title = 'PODE MELHORAR'; sub = 'Revise os conteúdos e tente novamente!'; }
+  else { emoji = '💪'; title = 'CONTINUE TENTANDO'; sub = 'Não desista, a prática leva à perfeição!'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = sub;
+  document.getElementById('score-display').innerHTML = `${score} <span>/ ${total}</span>`;
+  document.getElementById('stat-correct').textContent = score;
+  document.getElementById('stat-wrong').textContent = wrong;
+  document.getElementById('stat-pct').textContent = pct + '%';
+  showScreen('screen-result');
+}
+</script>
+</body>
+</html>
