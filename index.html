@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz · Turma 3B</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050508;
+      --surface: #0d0d14;
+      --border: rgba(255,255,255,0.06);
+      --accent: #00f0ff;
+      --accent-dim: rgba(0,240,255,0.07);
+      --accent-glow: rgba(0,240,255,0.2);
+      --correct: #00ffa3;
+      --wrong: #ff4d6d;
+      --text: #e8e8f0;
+      --muted: rgba(232,232,240,0.35);
+      --r: 10px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 20px 60px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.025) 2px, rgba(0,0,0,0.025) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: -20vh; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(0,240,255,0.055) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* HEADER */
+    header {
+      width: 100%; max-width: 600px;
+      padding: 48px 0 32px;
+    }
+    .eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    header h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(1.7rem, 6vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #fff;
+      line-height: 1.05;
+    }
+    header h1 em { color: var(--accent); font-style: normal; }
+
+    /* APP */
+    #app { width: 100%; max-width: 600px; }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: rise 0.3s ease; }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    hr.line {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    /* INTRO */
+    .intro-desc {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 28px;
+    }
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .team-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 36px;
+    }
+    .chip {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(232,232,240,0.55);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+    .start-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      border: 1px solid var(--accent);
+      border-radius: var(--r);
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 15px 26px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .start-btn:hover {
+      background: var(--accent-dim);
+      box-shadow: 0 0 22px var(--accent-glow);
+    }
+    .start-btn .arr { transition: transform 0.2s; }
+    .start-btn:hover .arr { transform: translateX(4px); }
+
+    /* QUIZ */
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .mono-sm {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+    .mono-sm.hi { color: var(--accent); }
+
+    .prog-track {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 32px;
+      position: relative;
+    }
+    .prog-fill {
+      height: 1px;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+    .prog-fill::after {
+      content: '';
+      position: absolute;
+      right: -3px; top: -3px;
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .q-emoji { font-size: 1.5rem; display: block; margin-bottom: 12px; }
+    .q-text {
+      font-size: clamp(1rem, 3.2vw, 1.18rem);
+      font-weight: 500;
+      line-height: 1.5;
+      color: #fff;
+      margin-bottom: 26px;
+    }
+
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+
+    .opt {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      align-items: center;
+      gap: 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: clamp(0.85rem, 2.8vw, 0.95rem);
+      font-weight: 400;
+      padding: 13px 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      width: 100%;
+    }
+    .opt-k {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .opt:hover:not(:disabled) {
+      border-color: rgba(0,240,255,0.3);
+      background: var(--accent-dim);
+      color: #fff;
+    }
+    .opt:hover:not(:disabled) .opt-k { color: var(--accent); }
+    .opt:disabled { cursor: default; }
+    .opt.correct { border-color: var(--correct); background: rgba(0,255,163,0.06); color: var(--correct); }
+    .opt.correct .opt-k { color: var(--correct); }
+    .opt.wrong   { border-color: var(--wrong);   background: rgba(255,77,109,0.06);  color: var(--wrong); }
+    .opt.wrong .opt-k { color: var(--wrong); }
+
+    .fb {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: var(--r);
+      border-left: 2px solid var(--border);
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .fb.show { display: block; }
+    .fb strong { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
+    .fb.correct { border-color: var(--correct); }
+    .fb.correct strong { color: var(--correct); }
+    .fb.wrong   { border-color: var(--wrong); }
+    .fb.wrong strong   { color: var(--wrong); }
+
+    .next-btn {
+      display: none;
+      margin-top: 22px;
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .next-btn.show { display: block; }
+    .next-btn:hover { border-color: rgba(255,255,255,0.18); color: #fff; }
+
+    /* RESULT */
+    .result-center { text-align: center; padding: 36px 0; }
+    .r-num {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(3.5rem, 16vw, 6rem);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+    .r-num em { color: var(--accent); font-style: normal; }
+    .r-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .r-tag {
+      display: inline-block;
+      margin-top: 20px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .r-msg {
+      font-size: 14px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--muted);
+      line-height: 1.7;
+      margin: 24px 0 32px;
+    }
+    .restart-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 15px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .restart-btn:hover { border-color: rgba(255,255,255,0.18); color: #fff; }
+
+    /* FOOTER */
+    footer {
+      width: 100%; max-width: 600px;
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+    }
+    footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.1);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Escola Menezes Pimentel · Turma 3B</p>
+  <h1>QUIZ<br><em>//</em> CURIOSIDADES</h1>
+</header>
+
+<div id="app">
+
+  <!-- INTRO -->
+  <section id="intro-screen" class="screen active">
+    <p class="intro-desc">10 perguntas sobre ciência, geografia e o mundo ao redor.<br>Veja quantas você consegue responder.</p>
+    <hr class="line" />
+    <p class="section-label">Equipe</p>
+    <div class="team-grid">
+      <span class="chip">Paulo Henrique</span>
+      <span class="chip">Jonatas</span>
+      <span class="chip">Wivis</span>
+      <span class="chip">Antônio Levi</span>
+      <span class="chip">Verismar</span>
+      <span class="chip">Carlos Eduardo</span>
+      <span class="chip">Carlos Daniel</span>
+      <span class="chip">Samuel</span>
+      <span class="chip">Nathanael</span>
+      <span class="chip">José Henrique</span>
+      <span class="chip">Evandro</span>
+    </div>
+    <button class="start-btn" id="startBtn">
+      Iniciar Quiz <span class="arr">→</span>
+    </button>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz-screen" class="screen">
+    <div class="meta-row">
+      <span class="mono-sm" id="qCount">01 / 10</span>
+      <span class="mono-sm hi" id="qScore">Score · 0</span>
+    </div>
+    <div class="prog-track">
+      <div class="prog-fill" id="progFill" style="width:0%"></div>
+    </div>
+    <span class="q-emoji" id="qEmoji"></span>
+    <p class="q-text" id="qText"></p>
+    <div class="opts" id="opts"></div>
+    <div class="fb" id="fb"></div>
+    <button class="next-btn" id="nextBtn">Continuar →</button>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result-screen" class="screen">
+    <hr class="line" />
+    <div class="result-center">
+      <div class="r-num" id="rNum">0<em>/10</em></div>
+      <div class="r-sub">acertos</div>
+      <div class="r-tag" id="rTag">—</div>
+    </div>
+    <p class="r-msg" id="rMsg"></p>
+    <button class="restart-btn" id="restartBtn">↺ &nbsp; Jogar novamente</button>
+  </section>
+
+</div>
+
+<footer>
+  <span>Quiz · 3B · 2024</span>
+  <span>Menezes Pimentel</span>
+</footer>
+
+<script>
+  const questions = [
+    { emoji:"🌊", question:"Qual é o maior oceano do mundo?", options:["Oceano Atlântico","Oceano Índico","Oceano Pacífico","Oceano Ártico"], correct:2, explanation:"O Pacífico cobre mais de 165 milhões de km² — maior que todos os continentes juntos." },
+    { emoji:"🪐", question:"Qual planeta tem mais luas conhecidas?", options:["Júpiter","Saturno","Urano","Netuno"], correct:1, explanation:"Saturno possui mais de 140 luas confirmadas, superando Júpiter recentemente." },
+    { emoji:"🦴", question:"Quantos ossos tem o corpo humano adulto?", options:["186","206","226","256"], correct:1, explanation:"São 206 ossos. Bebês nascem com cerca de 270 — eles fundem com o crescimento." },
+    { emoji:"⚡", question:"Quem comprovou que raios são eletricidade?", options:["Thomas Edison","Nikola Tesla","Albert Einstein","Benjamin Franklin"], correct:3, explanation:"Franklin realizou o experimento da pipa em 1752, provando que raios são descargas elétricas." },
+    { emoji:"🍄", question:"Qual é o maior ser vivo do planeta?", options:["Baleia-azul","Sequóia gigante","Fungo Armillaria ostoyae","Elefante africano"], correct:2, explanation:"O fungo Armillaria no Oregon (EUA) ocupa mais de 8 km² e tem cerca de 8.000 anos." },
+    { emoji:"💧", question:"Qual é a fórmula química da água?", options:["H₃O","HO₂","H₂O","O₂H"], correct:2, explanation:"H₂O: 2 átomos de hidrogênio e 1 de oxigênio — a molécula essencial à vida." },
+    { emoji:"🗺️", question:"Qual é o país com maior território do mundo?", options:["China","Estados Unidos","Canadá","Rússia"], correct:3, explanation:"A Rússia tem 17,1 milhões de km², o equivalente a quase dois Brasis." },
+    { emoji:"⬡", question:"Quantos lados tem um hexágono?", options:["5","6","7","8"], correct:1, explanation:"Hexágono vem do grego 'hex' (seis). As colmeias das abelhas são exemplos perfeitos na natureza." },
+    { emoji:"🎵", question:"Quantas notas existem na escala musical ocidental?", options:["5","6","7","8"], correct:2, explanation:"São 7 notas: Dó, Ré, Mi, Fá, Sol, Lá e Si — a base de toda a música ocidental." },
+    { emoji:"☀️", question:"Quanto tempo a luz do Sol leva para chegar à Terra?", options:["~8 minutos","~2 horas","~30 segundos","~1 hora"], correct:0, explanation:"Percorrendo ~150 milhões de km a 300.000 km/s, a luz chega em aproximadamente 8 min e 20 s." }
+  ];
+
+  const KEYS = ['A','B','C','D'];
+  let cur = 0, score = 0, answered = false;
+
+  const $ = id => document.getElementById(id);
+  const pad = n => n < 10 ? '0' + n : '' + n;
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+
+  function loadQ() {
+    answered = false;
+    const q = questions[cur];
+    const total = questions.length;
+
+    $('qCount').textContent = `${pad(cur + 1)} / ${pad(total)}`;
+    $('qScore').textContent  = `Score · ${score}`;
+    $('progFill').style.width = ((cur / total) * 100) + '%';
+    $('qEmoji').textContent  = q.emoji;
+    $('qText').textContent   = q.question;
+
+    const fb = $('fb');
+    fb.className = 'fb';
+    fb.innerHTML = '';
+
+    const nb = $('nextBtn');
+    nb.className = 'next-btn';
+    nb.textContent = cur === total - 1 ? 'Ver resultado →' : 'Continuar →';
+
+    const opts = $('opts');
+    opts.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt';
+      btn.innerHTML = `<span class="opt-k">${KEYS[i]}</span>${opt}`;
+      btn.addEventListener('click', () => pick(i, btn));
+      opts.appendChild(btn);
+    });
+  }
+
+  function pick(idx, btn) {
+    if (answered) return;
+    answered = true;
+    const q = questions[cur];
+    document.querySelectorAll('.opt').forEach(b => b.disabled = true);
+
+    const fb = $('fb');
+    if (idx === q.correct) {
+      score++;
+      btn.classList.add('correct');
+      fb.innerHTML = `<strong>Correto</strong>${q.explanation}`;
+      fb.className = 'fb correct show';
+    } else {
+      btn.classList.add('wrong');
+      document.querySelectorAll('.opt')[q.correct].classList.add('correct');
+      fb.innerHTML = `<strong>Incorreto</strong>${q.explanation}`;
+      fb.className = 'fb wrong show';
+    }
+    $('nextBtn').classList.add('show');
+  }
+
+  function showResult() {
+    const total = questions.length;
+    const pct = score / total;
+    let tag, msg;
+    if (pct === 1)      { tag = 'Perfeito';       msg = 'Você acertou todas as perguntas. Desempenho excepcional.'; }
+    else if (pct >= .7) { tag = 'Muito bom';      msg = 'Ótimo resultado. Você domina bem essas curiosidades.'; }
+    else if (pct >= .5) { tag = 'Bom trabalho';   msg = 'Mais da metade certa. Continue explorando o mundo ao redor.'; }
+    else                { tag = 'Continue assim'; msg = 'Cada erro é uma chance de aprender algo novo. Tente novamente.'; }
+
+    $('rNum').innerHTML = `${score}<em>/${total}</em>`;
+    $('rTag').textContent = tag;
+    $('rMsg').textContent = msg;
+    showScreen('result-screen');
+  }
+
+  $('startBtn').addEventListener('click',  () => { cur = 0; score = 0; loadQ(); showScreen('quiz-screen'); });
+  $('nextBtn').addEventListener('click',   () => { cur++; cur < questions.length ? loadQ() : showResult(); });
+  $('restartBtn').addEventListener('click',() => { cur = 0; score = 0; loadQ(); showScreen('quiz-screen'); });
+</script>
+</body>
+</html>
